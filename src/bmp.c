@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "bmp.h"
+#include "encode.h"
 
 #define BMP_BM_SIGNATURE 0x4D42
 
@@ -106,4 +107,10 @@ file_error_t read_main_data(int fd, struct image_data *img_d)
     }
     return SUCCESS;
 }
+
+int get_actual_row_size(int img_width, int bits_per_pixel)
+{
+    return ((bits_per_pixel * img_width + 31) / 32 ) * 4;
+}
+
 
