@@ -69,8 +69,10 @@ int decode(char *dst_str, const char *src_buffer, int row_bytes_c, int entire_ro
         
         if(current_row_byte_index == row_bytes_c)
         {
+            int skipped = entire_row_bytes_c - row_bytes_c;
             current_row_byte_index = 0;
-            src_buffer += entire_row_bytes_c - row_bytes_c;
+            src_buffer += skipped;
+            current_byte_index += skipped;
         }
     }
 
