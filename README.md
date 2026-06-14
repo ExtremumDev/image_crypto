@@ -6,11 +6,11 @@ Currently support only BMP files.
 
 ### To encode message:
 
-enc2img -s Message path/to/picture  
+```enc2img -s Message path/to/picture```  
 
 ### To decode the picture  
 
-enc2img -d path/to/picture  
+```enc2img -d path/to/picture```  
 
 ## Planned improvements:  
     - PNG, JPEG support
