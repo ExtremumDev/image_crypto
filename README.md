@@ -2,6 +2,15 @@
 
 Currently support only BMP files.
 
+## Usage  
 
-Planned improvements:  
+### To encode message:
+
+enc2img -s Message path/to/picture  
+
+### To decode the picture  
+
+enc2img -d path/to/picture  
+
+## Planned improvements:  
     - PNG, JPEG support
