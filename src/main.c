@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "error.h"
 #include "bmp.h"
@@ -26,6 +27,16 @@ int write_pixel_buffer(int fd, char *buffer, int buffer_size,  int pixels_offset
 
     return 0;
 }
+
+/*int image_fd;
+
+int check_file(int fd);
+
+int read_pixels_offset(int fd);
+
+int read_pixels_data(int fd);*/
+
+
 
 
 int main(int argc, char **argv)
@@ -66,7 +77,15 @@ int main(int argc, char **argv)
 
     if(image_fd == -1)
     {
-        printf("Failed to open your image");
+        switch(errno){
+            case ENOENT:
+                perror("Image does not exist");
+                break;
+            default:
+                perror("Failed to open your image\n");
+                break;
+
+        }
         return 1;
     }
 
@@ -74,7 +93,6 @@ int main(int argc, char **argv)
 
     if(check_bmp_st == -1)
     {
-        printf("Your image is not BMP");
         return 1;
     }
 
@@ -82,9 +100,8 @@ int main(int argc, char **argv)
 
     int call_status = read_main_data(image_fd, &img_d);
 
-    if(call_status < 0)
+    if(call_status == -1)
     {
-        printf("Failed to parse your file");
         return 1;
     }
 
