@@ -28,15 +28,39 @@ int write_pixel_buffer(int fd, char *buffer, int buffer_size,  int pixels_offset
     return 0;
 }
 
-/*int image_fd;
+char* read_pixel_buffer(int fd, struct image_data *img_d)
+{
 
-int check_file(int fd);
+    int call_status;
+    char *pixel_buffer;
 
-int read_pixels_offset(int fd);
+    call_status = lseek(fd, img_d->pixels_array_offset, SEEK_SET);
 
-int read_pixels_data(int fd);*/
+    if(call_status == -1)
+    {
+        return NULL;
+    }
+
+    pixel_buffer = malloc(img_d->pixel_array_size);
+
+    if(pixel_buffer == NULL)
+        return NULL;
+
+    call_status = read(fd, pixel_buffer, img_d->pixel_array_size);
+
+    if(call_status < img_d->pixel_array_size)
+    {
+        return NULL;
+    }
+
+    return pixel_buffer;
+}
 
 
+int check_string_fit(char *string, struct image_data *img_d)
+{
+    return img_d->valuable_row_bytes * img_d->height < 8 * (strlen(string) + 1);
+}
 
 
 int main(int argc, char **argv)
@@ -109,24 +133,20 @@ int main(int argc, char **argv)
 
     if(!settings.decode_fl)
     {
-        if(img_d.valuable_row_bytes * img_d.height < 8 * (strlen(settings.encoded_string) + 1)) /* If string will not fit in the pixel array*/
+        if(check_string_fit(settings.encoded_string, &img_d)) /* If string will not fit in the pixel array*/
         {
             printf("Your image is too small to encode your string in it\n");
             return 1;
         }
     }
     img_d.total_row_size = get_total_row_size(img_d.width, img_d.bits_per_pixel);
-    int pixel_array_size = img_d.total_row_size * img_d.height;
+    img_d.pixel_array_size = img_d.total_row_size * img_d.height;
 
-    call_status = lseek(image_fd, img_d.pixels_array_offset, SEEK_SET);
+    char *pixel_buffer = read_pixel_buffer(image_fd, &img_d);
 
-    char *pixel_buffer = malloc(pixel_array_size);
-
-    call_status = read(image_fd, pixel_buffer, pixel_array_size);
-
-    if(call_status < pixel_array_size)
+    if(pixel_buffer == NULL)
     {
-        printf("Your file is invalid");
+        perror("Your file is damaged\n");
         return 1;
     }
 
@@ -138,7 +158,7 @@ int main(int argc, char **argv)
             pixel_buffer,
             img_d.valuable_row_bytes,
             img_d.total_row_size,
-            pixel_array_size
+            img_d.pixel_array_size
         );
 
         if(decode_status < 0)
@@ -157,7 +177,7 @@ int main(int argc, char **argv)
         }
 
         call_status = lseek(image_fd, img_d.pixels_array_offset, SEEK_SET);
-        call_status = write(image_fd, pixel_buffer, pixel_array_size);
+        call_status = write(image_fd, pixel_buffer, img_d.pixel_array_size);
     }
     close(image_fd);
     

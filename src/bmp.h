@@ -7,7 +7,7 @@
 
 struct image_data {
     int width, height, bits_per_pixel, pixels_array_offset;
-    int total_row_size, valuable_row_bytes;
+    int total_row_size, valuable_row_bytes, pixel_array_size;
 };
 
 
