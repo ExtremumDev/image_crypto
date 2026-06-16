@@ -4,7 +4,7 @@
 
 #include "arg.h"
 
-#define ALLOWED_OPTIONS "dh"
+#define ALLOWED_OPTIONS "vdh"
 #define ALLOWED_SETTINGS "s"
 
 #define MAX_PARAM_NUMBER 1
@@ -49,6 +49,12 @@ static int parse_option(char option, struct program_settings *settings)
     switch(option){
         case 'd':
             settings->decode_fl = 1;
+            break;
+        case 'h':
+            settings->purpose = print_help_p;
+            break;
+        case 'v':
+            settings->purpose = print_version_p;
             break;
         default: 
             return -1;
@@ -132,7 +138,7 @@ int parse_arguments(struct program_settings *settings, int argc, char **argv)
         return -1;
     }
 
-    if(simple_parameters > 0)
+    if(param_idx > 0)
     {
         settings->image_path = simple_parameters[0];
     }
@@ -145,4 +151,5 @@ void set_default_settings(struct program_settings *settings)
     settings->decode_fl = 0;
     settings->encoded_string = NULL;
     settings->image_path = NULL;
+    settings->purpose = base_p;
 }

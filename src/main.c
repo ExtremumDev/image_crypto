@@ -10,8 +10,19 @@
 #include "encoder.h"
 #include "arg.h"
 
-#define VERSION "v alpha 0.0.0"
+#define PROGRAM_VERSION "v alpha 0.0.0"
 
+void print_help()
+{
+    puts(
+        "Utils for encoding messages into the image. Supported image formats: BMP\n\
+To encode message: enc2img -s \"Your message\" path/to/your/image\n\n\
+To decode the message from image: enc2img -d path/to/your/image\n\n\
+Addtitional flags: \n\
+-h - Show this message \n\
+-v - Print program version" 
+    );
+}
 
 int write_pixel_buffer(int fd, char *buffer, int buffer_size,  int pixels_offset)
 {
@@ -62,6 +73,24 @@ int check_string_fit(char *string, struct image_data *img_d)
     return img_d->valuable_row_bytes * img_d->height < 8 * (strlen(string) + 1);
 }
 
+int identify_program_purpose(enum program_purpose purpose)
+{
+    /* Return:
+     *  0 - program should continue working in normal mode;
+     * -1 - special purpose was finished and program should not continue executing;
+     */
+    switch(purpose){
+        case print_version_p:
+            puts(PROGRAM_VERSION);
+            return -1;
+        case print_help_p:
+            print_help();
+            return -1;
+        default:
+            return 0;
+    }
+}
+
 
 int main(int argc, char **argv)
 {
@@ -74,6 +103,11 @@ int main(int argc, char **argv)
     {
         return 1;
     }
+
+    int check = identify_program_purpose(settings.purpose);
+
+    if(check == -1)
+        return 1;
 
     char *image_path = settings.image_path;
 
