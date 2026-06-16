@@ -65,18 +65,10 @@ int check_string_fit(char *string, struct image_data *img_d)
 
 int main(int argc, char **argv)
 {
-    struct input_parameters parameters;
-    parameters.options_len = parameters.parameters_len = parameters.settings_len = 0;
-    int parse_status = parse_arguments(&parameters, argc, argv);
-
-    if(parse_status < 0)
-    {
-        return 1;
-    }
-
     struct program_settings settings;
     set_default_settings(&settings);
-    parse_status = parse_program_settings(&parameters, &settings);
+
+    int parse_status = parse_arguments(&settings, argc, argv);
 
     if(parse_status < 0)
     {

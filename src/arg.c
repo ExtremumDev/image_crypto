@@ -7,6 +7,8 @@
 #define ALLOWED_OPTIONS "dh"
 #define ALLOWED_SETTINGS "s"
 
+#define MAX_PARAM_NUMBER 1
+
 
 static int check_el_in_array(char el, const char *arr)
 {
@@ -30,10 +32,36 @@ static int is_setting(char option)
     return check_el_in_array(option, ALLOWED_SETTINGS);
 }
 
-
-int parse_arguments(struct input_parameters *parameters, int argc, char **argv)
+static int parse_option_setting(char option_key, char *value, struct program_settings *settings)
 {
-    int arg_idx, await_setting_value_fl = 0;
+    switch(option_key){
+        case 's':
+            settings->encoded_string = value;
+            break;
+        default:
+            return -1;
+    }
+    return 0;
+}
+
+static int parse_option(char option, struct program_settings *settings)
+{
+    switch(option){
+        case 'd':
+            settings->decode_fl = 1;
+            break;
+        default: 
+            return -1;
+    }
+    return 0;
+}
+
+int parse_arguments(struct program_settings *settings, int argc, char **argv)
+{
+    char *simple_parameters[MAX_PARAM_NUMBER];
+    int param_idx = 0;
+
+    int func_status, arg_idx, await_setting_value_fl = 0;
     char setting_key;
 
     for(arg_idx = 1; arg_idx < argc; arg_idx++)
@@ -48,9 +76,13 @@ int parse_arguments(struct input_parameters *parameters, int argc, char **argv)
         }
         if(await_setting_value_fl)
         {
-            parameters->settings[parameters->settings_len].key = setting_key;
-            parameters->settings[parameters->settings_len].value = arg;
-            parameters->settings_len++;
+            func_status = parse_option_setting(setting_key, arg, settings);
+            
+            if(func_status == -1)
+            {
+                fprintf(stderr, "Invalid option -%c", setting_key);
+                return -1;
+            }
             await_setting_value_fl = 0;
             continue;
         }
@@ -72,64 +104,41 @@ int parse_arguments(struct input_parameters *parameters, int argc, char **argv)
 
             if(is_option(arg[1]))
             {
-                parameters->options[parameters->options_len] = arg[1];
-                parameters->options_len++;
+                func_status = parse_option(arg[1], settings);
+
+                if(func_status == -1)
+                {
+                    fprintf(stderr, "Unknown option -%c", arg[1]);
+                    return -1;
+                }
             } else {
                 fprintf(stderr, "Unknown option -%c\n", arg[1]);
                 return -1;
             }
         } else {
-            parameters->simple_parameters[parameters->parameters_len] = arg;
-            parameters->parameters_len++;
+            if(param_idx >= MAX_PARAM_NUMBER)
+            {
+                perror("Too many arguments, try enc2img -h for help information\n");
+                return -1;
+            }
+            simple_parameters[param_idx] = arg;
+            param_idx++;
         }
 
     }
     if(await_setting_value_fl) /* If last option awaits providing a value and arguments have finished */
     {
-        fprintf(stderr, "Value of flag wasnt prodided\n");
+        fprintf(stderr, "Value of option -%c wasnt prodided\n", setting_key);
         return -1;
     }
-    return 0;
-}
 
-
-int parse_program_settings(struct input_parameters *param, struct program_settings *settings)
-{
-    char option; int i = 0;
-    char *value;
-    for(option = param->options[i]; i < param->options_len; option=param->options[i++])
+    if(simple_parameters > 0)
     {
-        switch(option){
-            case 'd':
-                settings->decode_fl = 1;
-                break;
-            default: 
-                fprintf(stderr, "Unknown option -%c", option);
-                return -1;
-        }
-    }
-    
-    for(i = 0; i < param->settings_len; i++)
-    {
-        value = param->settings[i].value;
-        option = param->settings[i].key;
-
-        switch(option){
-            case 's':
-                settings->encoded_string = value;
-                break;
-            default:
-                fprintf(stderr, "Unknow option -%c", option);
-                return -1;
-        }
-    }
-
-    if(param->parameters_len > 0)
-    {
-        settings->image_path = param->simple_parameters[0];
+        settings->image_path = simple_parameters[0];
     }
     return 0;
 }
+
 
 void set_default_settings(struct program_settings *settings)
 {
